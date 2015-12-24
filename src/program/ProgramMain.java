@@ -4,20 +4,21 @@ import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
 import javax.swing.JMenuBar;
-import java.awt.CardLayout;
 import javax.swing.JMenuItem;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import javax.swing.JMenu;
 import javax.swing.JLayeredPane;
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
+import java.awt.CardLayout;
 
 @SuppressWarnings("serial")
 public class ProgramMain extends JFrame {
 
+	private JLayeredPane contentPane;
+	private JPanel panel_1;
+	private CardLayout container;
+	private JPanel panel;
 	/**
 	 * Launch the application.
 	 */
@@ -52,17 +53,19 @@ public class ProgramMain extends JFrame {
 		mntmConnect.addActionListener(new MntmConnectActionListener());
 		mnFile.add(mntmConnect);
 		
-		JPanel contentPane = new JPanel();
+		contentPane = new JLayeredPane();
 		setContentPane(contentPane);
-		contentPane.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+		contentPane.setLayout(new CardLayout(0, 0));
 		
-		JLayeredPane layeredPane = new JLayeredPane();
-		contentPane.add(layeredPane);
-		layeredPane.setLayout(null);
+		panel = new JPanel();
+		contentPane.add(panel, "panel");
+		panel.setLayout(null);
 		
-		PanelConnect panel = new PanelConnect();
-		panel.setBounds(0, 5, 1, 1);
-		layeredPane.add(panel);
+		panel_1 = new JPanel();
+		contentPane.add(panel_1, "panel_1");
+		panel_1.setLayout(null);
+		
+		container = (CardLayout) contentPane.getLayout();
 	}
 	
 	private class MntmConnectActionListener implements ActionListener {
