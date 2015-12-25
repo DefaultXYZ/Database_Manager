@@ -6,6 +6,8 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import javax.swing.JMenu;
@@ -60,6 +62,7 @@ public class ProgramMain extends JFrame {
 	 * Create the frame.
 	 */
 	public ProgramMain() {
+		setTitle("Default - Database Manager");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(0, 0, 500, 450);
 		setLocationRelativeTo(null);
@@ -67,17 +70,18 @@ public class ProgramMain extends JFrame {
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
 		
-		JMenu mnFile = new JMenu("File");
-		menuBar.add(mnFile);
+		JMenu mn_file = new JMenu("File");
+		menuBar.add(mn_file);
 		
-		JMenuItem mntmConnect = new JMenuItem("Connect...");
-		mntmConnect.addActionListener(new MntmConnectActionListener());
-		mnFile.add(mntmConnect);
+		JMenuItem mnIt_connect = new JMenuItem("Connect...");
+		mnIt_connect.addActionListener(new MntmConnectActionListener());
+		mn_file.add(mnIt_connect);
 		
 		contentPane = new JPanel();
 		setContentPane(contentPane);
 		contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
 		
+		// Contains all panels
 		panel_slider = new JLayeredPane();
 		panel_slider.setLayout(new CardLayout(0, 0));
 		contentPane.add(panel_slider);
@@ -114,13 +118,29 @@ public class ProgramMain extends JFrame {
 		panel_tables.setLayout(null);
 		
 		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(12, 12, 181, 344);
+		scrollPane.setBounds(12, 47, 181, 309);
 		panel_tables.add(scrollPane);
 		
 		list_databases = new JList<String>();
 		list_databases.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		scrollPane.setViewportView(list_databases);
 		
+		JLabel lbl_databases = new JLabel("Databases");
+		lbl_databases.setHorizontalAlignment(SwingConstants.LEFT);
+		lbl_databases.setBounds(12, 19, 89, 16);
+		panel_tables.add(lbl_databases);
+		
+		JButton btn_create = new JButton("Create");
+		btn_create.addActionListener(new BtnCreateActionListener());
+		btn_create.setBounds(205, 44, 98, 26);
+		panel_tables.add(btn_create);
+		
+		JButton btn_drop = new JButton("Drop");
+		btn_drop.addActionListener(new Btn_dropActionListener());
+		btn_drop.setBounds(315, 44, 98, 26);
+		panel_tables.add(btn_drop);
+		
+		// For accessing to all panels
 		container = (CardLayout) panel_slider.getLayout();
 		
 		panel_statusBar = new JPanel();
@@ -135,6 +155,26 @@ public class ProgramMain extends JFrame {
 		
 	}
 	
+	// Try to connect
+	private class BtnConnectActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent arg0) {
+			// Class for managing databases
+			databaseManager = new DatabaseManager(tF_user.getText(),
+					tF_pass.getText());
+			databaseManager.connect();
+			lbl_status.setText("Connecting...");
+			// If connected, get all databases
+			if(databaseManager.isConnected()) {
+				lbl_status.setText("Connection is successful");
+				fillList();
+				container.show(panel_slider, "panel_tables");
+			} else {
+				lbl_status.setText("Connection is failed");
+			}
+		}
+	}
+	
+	// Return to Connection Panel
 	private class MntmConnectActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			databaseManager.disconnect();
@@ -142,23 +182,37 @@ public class ProgramMain extends JFrame {
 			container.show(panel_slider, "panel_connect");
 		}
 	}
-	private class BtnConnectActionListener implements ActionListener {
+	
+	// Creating new database
+	private class BtnCreateActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent arg0) {
-			databaseManager = new DatabaseManager(tF_user.getText(),
-					tF_pass.getText());
-			databaseManager.connect();
-			lbl_status.setText("Connecting...");
-			if(databaseManager.isConnected()) {
-				lbl_status.setText("Connection is successful");
-			} else {
-				lbl_status.setText("Connection is failed");
+			String newName = JOptionPane.showInputDialog("Enter new name:");
+			if(newName != null) {
+				databaseManager.createDB(newName);
+				fillList();
 			}
-			DefaultListModel<String> model = new DefaultListModel<>();
-			for(String db : databaseManager.showDB()) {
-				model.addElement(db);
-			}
-			list_databases.setModel(model);
-			container.show(panel_slider, "panel_tables");
 		}
+	}
+	
+	// Deleting database
+	private class Btn_dropActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			if(!list_databases.isSelectionEmpty()) {
+				databaseManager.dropDB(list_databases.getSelectedValue());
+				fillList();
+			}
+		}
+	}
+	
+	// Getting list of databases
+	private void fillList() {
+		// For sending list to JList
+		DefaultListModel<String> model = new DefaultListModel<>();
+		// Getting list of databases
+		for(String db : databaseManager.showDB()) {
+			model.addElement(db);
+		}
+		// JList contains list model
+		list_databases.setModel(model);
 	}
 }

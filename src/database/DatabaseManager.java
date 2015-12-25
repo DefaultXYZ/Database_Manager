@@ -49,7 +49,7 @@ public class DatabaseManager {
 	
 	public void useDB(String name) {
 		try {
-			statement.execute(Database.use(name));
+			statement.executeQuery(Database.use(name));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -57,7 +57,7 @@ public class DatabaseManager {
 	
 	public void createDB(String name) {
 		try {
-			statement.executeQuery(Database.create(name));
+			statement.executeUpdate(Database.create(name));
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -65,7 +65,7 @@ public class DatabaseManager {
 	
 	public void dropDB(String name) {
 		try {
-			statement.executeQuery(Database.drop(name));
+			statement.executeUpdate(Database.drop(name));
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -85,10 +85,13 @@ public class DatabaseManager {
 		return null;
 	}
 	
+	// Getting queries via classes
 	private static class Database {
+		
 		private static String use(String name) {
 			return "USE " + name;
 		}
+		
 		private static String create(String name) {
 			return "CREATE DATABASE " + name;
 		}
