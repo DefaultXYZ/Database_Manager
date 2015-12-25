@@ -15,10 +15,9 @@ public class DatabaseManager {
 	public DatabaseManager(String user, String password) {
 		this.user = user;
 		this.password = password;
-		connect();
 	}
 	
-	private void connect() {
+	public void connect() {
 		try {
 			Class.forName(DRIVER);
 			connection = DriverManager.getConnection(URL, user, password);
@@ -54,6 +53,22 @@ public class DatabaseManager {
 		}
 	}
 	
+	public void createDB(String name) {
+		try {
+			statement.executeQuery(Database.create(name));
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void dropDB(String name) {
+		try {
+			statement.executeQuery(Database.drop(name));
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	private static class Database {
 		private static String use(String name) {
 			return "USE " + name;
@@ -67,6 +82,7 @@ public class DatabaseManager {
 		}
 	}
 	
+	@SuppressWarnings("unused")
 	private static class Table {
 		private static String drop(String name) {
 			return "DROP TABLE " + name;
