@@ -2,7 +2,9 @@ package database;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Vector;
 
 public class DatabaseManager {
 	private static final String DRIVER = "com.mysql.jdbc.Driver";
@@ -69,6 +71,20 @@ public class DatabaseManager {
 		}
 	}
 	
+	public Vector<String> showDB() {
+		try {
+			Vector<String> databases = new Vector<>();
+			ResultSet resultSet = statement.executeQuery(Database.show());
+			while(resultSet.next()) {
+				databases.add(resultSet.getString(1));
+			}
+			return databases;
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
 	private static class Database {
 		private static String use(String name) {
 			return "USE " + name;
@@ -79,6 +95,10 @@ public class DatabaseManager {
 		
 		private static String drop(String name) {
 			return "DROP DATABASE " + name;
+		}
+		
+		private static String show() {
+			return "SHOW DATABASES";
 		}
 	}
 	

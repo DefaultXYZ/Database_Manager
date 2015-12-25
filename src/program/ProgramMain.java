@@ -17,16 +17,29 @@ import database.DatabaseManager;
 
 import javax.swing.JLabel;
 import javax.swing.JButton;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultListModel;
+
+import java.awt.FlowLayout;
+import javax.swing.border.EtchedBorder;
+import javax.swing.SwingConstants;
+import javax.swing.JList;
+import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
 
 @SuppressWarnings("serial")
 public class ProgramMain extends JFrame {
 
-	private JLayeredPane contentPane;
+	private JLayeredPane panel_slider;
 	private CardLayout container;
-	private JPanel panel_Connect;
+	private JPanel panel_connect;
 	private JTextField tF_pass;
 	private DatabaseManager databaseManager;  
 	private JTextField tF_user;
+	private JPanel contentPane;
+	private JLabel lbl_status;
+	private JPanel panel_statusBar;
+	private JList<String> list_databases;
 	/**
 	 * Launch the application.
 	 */
@@ -61,49 +74,72 @@ public class ProgramMain extends JFrame {
 		mntmConnect.addActionListener(new MntmConnectActionListener());
 		mnFile.add(mntmConnect);
 		
-		contentPane = new JLayeredPane();
+		contentPane = new JPanel();
 		setContentPane(contentPane);
-		contentPane.setLayout(new CardLayout(0, 0));
+		contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
 		
-		panel_Connect = new JPanel();
-		contentPane.add(panel_Connect, "panel_Connect");
-		panel_Connect.setLayout(null);
+		panel_slider = new JLayeredPane();
+		panel_slider.setLayout(new CardLayout(0, 0));
+		contentPane.add(panel_slider);
+		
+		panel_connect = new JPanel();
+		panel_slider.add(panel_connect, "panel_connect");
+		panel_connect.setLayout(null);
 		
 		tF_user = new JTextField();
 		tF_user.setBounds(246, 122, 114, 20);
-		panel_Connect.add(tF_user);
+		panel_connect.add(tF_user);
 		tF_user.setColumns(10);
 		
-		JLabel lblUsename = new JLabel("Usename:");
-		lblUsename.setBounds(141, 124, 87, 16);
-		panel_Connect.add(lblUsename);
+		JLabel lbl_username = new JLabel("Username:");
+		lbl_username.setBounds(141, 124, 87, 16);
+		panel_connect.add(lbl_username);
 		
 		tF_pass = new JTextField();
 		tF_pass.setBounds(246, 154, 114, 20);
-		panel_Connect.add(tF_pass);
+		panel_connect.add(tF_pass);
 		tF_pass.setColumns(10);
 		
-		JLabel lblPassword = new JLabel("Password:");
-		lblPassword.setBounds(141, 156, 87, 16);
-		panel_Connect.add(lblPassword);
+		JLabel lbl_password = new JLabel("Password:");
+		lbl_password.setBounds(141, 156, 87, 16);
+		panel_connect.add(lbl_password);
 		
-		JButton btnConnect = new JButton("Connect");
-		btnConnect.addActionListener(new BtnConnectActionListener());
-		btnConnect.setBounds(192, 277, 98, 26);
-		panel_Connect.add(btnConnect);
+		JButton btn_connect = new JButton("Connect");
+		btn_connect.addActionListener(new BtnConnectActionListener());
+		btn_connect.setBounds(192, 277, 98, 26);
+		panel_connect.add(btn_connect);
 		
-		JPanel panel_Tables = new JPanel();
-		contentPane.add(panel_Tables, "panel_Tables");
-		panel_Tables.setLayout(null);
+		JPanel panel_tables = new JPanel();
+		panel_slider.add(panel_tables, "panel_tables");
+		panel_tables.setLayout(null);
 		
-		container = (CardLayout) contentPane.getLayout();
+		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setBounds(12, 12, 181, 344);
+		panel_tables.add(scrollPane);
+		
+		list_databases = new JList<String>();
+		list_databases.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		scrollPane.setViewportView(list_databases);
+		
+		container = (CardLayout) panel_slider.getLayout();
+		
+		panel_statusBar = new JPanel();
+		panel_statusBar.setBorder(new EtchedBorder(EtchedBorder.RAISED, null, null));
+		contentPane.add(panel_statusBar);
+		FlowLayout fl_panel_statusBar = new FlowLayout(FlowLayout.LEFT, 5, 0);
+		panel_statusBar.setLayout(fl_panel_statusBar);
+		
+		lbl_status = new JLabel("Disconnected");
+		lbl_status.setHorizontalAlignment(SwingConstants.CENTER);
+		panel_statusBar.add(lbl_status);
 		
 	}
 	
 	private class MntmConnectActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			databaseManager.disconnect();
-			container.show(contentPane, "panel_Connect");
+			lbl_status.setText("Disconnected");
+			container.show(panel_slider, "panel_connect");
 		}
 	}
 	private class BtnConnectActionListener implements ActionListener {
@@ -111,7 +147,18 @@ public class ProgramMain extends JFrame {
 			databaseManager = new DatabaseManager(tF_user.getText(),
 					tF_pass.getText());
 			databaseManager.connect();
-			container.show(contentPane, "panel_Tables");
+			lbl_status.setText("Connecting...");
+			if(databaseManager.isConnected()) {
+				lbl_status.setText("Connection is successful");
+			} else {
+				lbl_status.setText("Connection is failed");
+			}
+			DefaultListModel<String> model = new DefaultListModel<>();
+			for(String db : databaseManager.showDB()) {
+				model.addElement(db);
+			}
+			list_databases.setModel(model);
+			container.show(panel_slider, "panel_tables");
 		}
 	}
 }
