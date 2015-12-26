@@ -31,8 +31,10 @@ public class DatabaseManager {
 	
 	public void disconnect() {
 		try {
-			statement.close();
-			connection.close();
+			if(isConnected()) {
+				statement.close();
+				connection.close();
+			}
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -40,11 +42,12 @@ public class DatabaseManager {
 	
 	public boolean isConnected() {
 		try {
-			return connection.isValid(0);
+			return connection.isValid(10);
 		} catch (Exception e) {
-			e.printStackTrace();
+			return false;
+			//e.printStackTrace();
 		}
-		return false;
+		
 	}
 	
 	public void useDB(String name) {
@@ -85,6 +88,30 @@ public class DatabaseManager {
 		return null;
 	}
 	
+	public Vector<String> showTables() {
+		try {
+			Vector<String> tables = new Vector<>();
+			ResultSet resultSet = statement.executeQuery(Table.show());
+			while(resultSet.next()) {
+				tables.addElement(resultSet.getString(1));
+			}
+			return tables;
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public boolean isDatabaseUsed() {
+		try {
+			ResultSet resultSet = statement.executeQuery(Database.used());
+			return resultSet.next();
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
 	// Getting queries via classes
 	private static class Database {
 		
@@ -103,12 +130,20 @@ public class DatabaseManager {
 		private static String show() {
 			return "SHOW DATABASES";
 		}
+		
+		private static String used() {
+			return "SELECT DATABASE() FROM DUAL";
+		}
 	}
 	
-	@SuppressWarnings("unused")
 	private static class Table {
+		@SuppressWarnings("unused")
 		private static String drop(String name) {
 			return "DROP TABLE " + name;
+		}
+		
+		private static String show() {
+			return "SHOW TABLES";
 		}
 	}
 }
