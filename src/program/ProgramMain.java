@@ -53,6 +53,7 @@ public class ProgramMain extends JFrame {
 	private JMenuItem mnIt_connect;
 	private JMenuItem mnIt_databases;
 	private JMenuItem mnIt_tables;
+	private JButton btn_back;
 	/**
 	 * Launch the application.
 	 */
@@ -177,15 +178,20 @@ public class ProgramMain extends JFrame {
 		panel_tables.setLayout(null);
 		
 		JScrollPane scrollPane_1 = new JScrollPane();
-		scrollPane_1.setBounds(12, 34, 165, 322);
+		scrollPane_1.setBounds(12, 81, 165, 275);
 		panel_tables.add(scrollPane_1);
 		
 		list_tables = new JList<String>();
 		scrollPane_1.setViewportView(list_tables);
 		
-		JLabel lblTables = new JLabel("Tables");
-		lblTables.setBounds(12, 12, 55, 16);
-		panel_tables.add(lblTables);
+		JLabel lbl_tables = new JLabel("Tables");
+		lbl_tables.setBounds(12, 53, 55, 16);
+		panel_tables.add(lbl_tables);
+		
+		btn_back = new JButton("Back");
+		btn_back.addActionListener(new Btn_backActionListener());
+		btn_back.setBounds(12, 12, 98, 26);
+		panel_tables.add(btn_back);
 		
 		panel_statusBar = new JPanel();
 		panel_statusBar.setBorder(new EtchedBorder(EtchedBorder.RAISED, null, null));
@@ -211,6 +217,7 @@ public class ProgramMain extends JFrame {
 			if(databaseManager.isConnected()) {
 				lbl_status.setText("Connection is successful");
 				fillListDatabases();
+				mnIt_databases.setEnabled(true);
 				container.show(panel_slider, TAG_DATABASES);
 			} else {
 				lbl_status.setText("Connection is failed");
@@ -223,6 +230,8 @@ public class ProgramMain extends JFrame {
 		public void actionPerformed(ActionEvent e) {
 			databaseManager.disconnect();
 			lbl_status.setText("Disconnected");
+			mnIt_databases.setEnabled(false);
+			mnIt_tables.setEnabled(false);
 			container.show(panel_slider, TAG_CONNECT);
 		}
 	}
@@ -258,6 +267,7 @@ public class ProgramMain extends JFrame {
 				String db = list_databases.getSelectedValue();
 				databaseManager.useDB(db);
 				fillListTables();
+				mnIt_tables.setEnabled(true);
 				container.show(panel_slider, TAG_TABLES);
 				lbl_status.setText("Using database " + db);
 			}
@@ -267,6 +277,15 @@ public class ProgramMain extends JFrame {
 	// Refresh List of Databases
 	private class Btn_refreshActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent arg0) {
+			fillListDatabases();
+		}
+	}
+	
+	// Back to Databases
+	private class Btn_backActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent arg0) {
+			mnIt_tables.setEnabled(false);
+			list_tables.clearSelection();
 			fillListDatabases();
 		}
 	}

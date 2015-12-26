@@ -44,10 +44,9 @@ public class DatabaseManager {
 		try {
 			return connection.isValid(10);
 		} catch (Exception e) {
-			return false;
-			//e.printStackTrace();
+			e.printStackTrace();
 		}
-		
+		return false;
 	}
 	
 	public void useDB(String name) {
