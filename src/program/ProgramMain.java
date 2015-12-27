@@ -53,7 +53,7 @@ public class ProgramMain extends JFrame {
 	private JMenuItem mnIt_connect;
 	private JMenuItem mnIt_databases;
 	private JMenuItem mnIt_tables;
-	private JButton btn_back;
+	private JButton btn_backTable;
 	/**
 	 * Launch the application.
 	 */
@@ -138,7 +138,7 @@ public class ProgramMain extends JFrame {
 		panel_databases.setLayout(null);
 		
 		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(12, 47, 181, 309);
+		scrollPane.setBounds(12, 93, 181, 263);
 		panel_databases.add(scrollPane);
 		
 		list_databases = new JList<String>();
@@ -147,7 +147,7 @@ public class ProgramMain extends JFrame {
 		
 		JLabel lbl_databases = new JLabel("Databases");
 		lbl_databases.setHorizontalAlignment(SwingConstants.LEFT);
-		lbl_databases.setBounds(12, 19, 89, 16);
+		lbl_databases.setBounds(12, 65, 89, 16);
 		panel_databases.add(lbl_databases);
 		
 		JButton btn_create = new JButton("Create");
@@ -170,6 +170,11 @@ public class ProgramMain extends JFrame {
 		btn_refresh.setBounds(315, 82, 98, 26);
 		panel_databases.add(btn_refresh);
 		
+		JButton btn_backDb = new JButton("Back");
+		btn_backDb.addActionListener(new Btn_backDbActionListener());
+		btn_backDb.setBounds(12, 12, 98, 26);
+		panel_databases.add(btn_backDb);
+		
 		// For accessing to all panels
 		container = (CardLayout) panel_slider.getLayout();
 		
@@ -188,10 +193,10 @@ public class ProgramMain extends JFrame {
 		lbl_tables.setBounds(12, 53, 55, 16);
 		panel_tables.add(lbl_tables);
 		
-		btn_back = new JButton("Back");
-		btn_back.addActionListener(new Btn_backActionListener());
-		btn_back.setBounds(12, 12, 98, 26);
-		panel_tables.add(btn_back);
+		btn_backTable = new JButton("Back");
+		btn_backTable.addActionListener(new Btn_backActionListener());
+		btn_backTable.setBounds(12, 12, 98, 26);
+		panel_tables.add(btn_backTable);
 		
 		panel_statusBar = new JPanel();
 		panel_statusBar.setBorder(new EtchedBorder(EtchedBorder.RAISED, null, null));
@@ -287,6 +292,17 @@ public class ProgramMain extends JFrame {
 			mnIt_tables.setEnabled(false);
 			list_tables.clearSelection();
 			fillListDatabases();
+			container.show(panel_slider, TAG_DATABASES);
+		}
+	}
+	
+	// Back to Connect
+	private class Btn_backDbActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent arg0) {
+			mnIt_databases.setEnabled(false);
+			databaseManager.disconnect();
+			lbl_status.setText("Disconnected");
+			container.show(panel_slider, TAG_CONNECT);
 		}
 	}
 	
