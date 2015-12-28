@@ -216,6 +216,11 @@ public class ProgramMain extends JFrame {
 		btn_createTable.setBounds(199, 12, 98, 26);
 		panel_tables.add(btn_createTable);
 		
+		JButton btnDrop = new JButton("Drop");
+		btnDrop.addActionListener(new BtnDropActionListener());
+		btnDrop.setBounds(324, 12, 98, 26);
+		panel_tables.add(btnDrop);
+		
 		panel_addTable = new JPanel();
 		panel_slider.add(panel_addTable, TAG_ADD_TABLE);
 		panel_addTable.setLayout(null);
@@ -402,6 +407,7 @@ public class ProgramMain extends JFrame {
 				rowSize.addElement(table_createTable.getValueAt(i, 2).toString());
 			}
 			databaseManager.createTable(tableName, rowName, rowType, rowSize);
+			container.show(panel_slider, TAG_TABLES);
 		}
 	}
 	
@@ -409,6 +415,13 @@ public class ProgramMain extends JFrame {
 	private class Btn_deleteRowActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			modelNewDBTable.removeRow(table_createTable.getSelectedRow());
+		}
+	}
+	
+	// Drop table
+	private class BtnDropActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent arg0) {
+			databaseManager.dropTable(list_tables.getSelectedValue());
 		}
 	}
 	

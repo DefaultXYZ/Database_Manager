@@ -130,6 +130,14 @@ public class DatabaseManager {
 		}
 	}
 	
+	public void dropTable(String name) {
+		try {
+			statement.executeUpdate(Table.drop(name));
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	// Getting queries via classes
 	private static class Database {
 		
@@ -155,7 +163,6 @@ public class DatabaseManager {
 	}
 	
 	private static class Table {
-		@SuppressWarnings("unused")
 		private static String drop(String name) {
 			return "DROP TABLE " + name;
 		}
