@@ -12,6 +12,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import javax.swing.JMenu;
 import javax.swing.JLayeredPane;
+
 import java.awt.CardLayout;
 import javax.swing.JTextField;
 
@@ -19,7 +20,9 @@ import database.DatabaseManager;
 
 import javax.swing.JLabel;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.BoxLayout;
+import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultListModel;
 
 import java.awt.FlowLayout;
@@ -29,6 +32,10 @@ import javax.swing.JList;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 import java.util.Vector;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
 
 @SuppressWarnings("serial")
 public class ProgramMain extends JFrame {
@@ -36,6 +43,7 @@ public class ProgramMain extends JFrame {
 	private final static String TAG_CONNECT = "CONNECT";
 	private final static String TAG_DATABASES = "DATABASES";
 	private final static String TAG_TABLES = "TABLES";
+	private final static String TAG_ADD_TABLE = "ADD_TABLE";
 	
 	private JLayeredPane panel_slider;
 	private CardLayout container;
@@ -54,6 +62,10 @@ public class ProgramMain extends JFrame {
 	private JMenuItem mnIt_databases;
 	private JMenuItem mnIt_tables;
 	private JButton btn_backTable;
+	private JPanel panel_addTable;
+	private JButton btn_addRow;
+	private DefaultTableModel modelNewDBTable;
+	private JTable table_createTable;
 	/**
 	 * Launch the application.
 	 */
@@ -74,6 +86,7 @@ public class ProgramMain extends JFrame {
 	 * Create the frame.
 	 */
 	public ProgramMain() {
+		setResizable(false);
 		setTitle("Default - Database Manager");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(0, 0, 500, 450);
@@ -198,6 +211,62 @@ public class ProgramMain extends JFrame {
 		btn_backTable.setBounds(12, 12, 98, 26);
 		panel_tables.add(btn_backTable);
 		
+		JButton btn_createTable = new JButton("Create");
+		btn_createTable.addActionListener(new Btn_createTableActionListener());
+		btn_createTable.setBounds(199, 12, 98, 26);
+		panel_tables.add(btn_createTable);
+		
+		panel_addTable = new JPanel();
+		panel_slider.add(panel_addTable, TAG_ADD_TABLE);
+		panel_addTable.setLayout(null);
+		
+		btn_addRow = new JButton("Add row");
+		btn_addRow.addActionListener(new Btn_addRowActionListener());
+		btn_addRow.setBounds(12, 12, 98, 26);
+		panel_addTable.add(btn_addRow);
+		
+		JScrollPane scrollPane_2 = new JScrollPane();
+		scrollPane_2.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		scrollPane_2.setBounds(12, 50, 470, 316);
+		panel_addTable.add(scrollPane_2);
+		
+		
+		table_createTable = new JTable();
+		table_createTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		
+		modelNewDBTable = new DefaultTableModel();
+		modelNewDBTable.addColumn("Name");
+		modelNewDBTable.addColumn("Type");
+		modelNewDBTable.addColumn("Size");
+		table_createTable.setModel(modelNewDBTable);
+		
+		// Column Name
+		TableColumn columnName = table_createTable.getColumnModel().getColumn(0);
+		columnName.setCellEditor(new DefaultCellEditor(new JTextField()));
+		// Column Type
+		TableColumn columnType = table_createTable.getColumnModel().getColumn(1);
+		JComboBox<String> comboBox = new JComboBox<>();
+		comboBox.addItem("CHAR");
+		comboBox.addItem("INT");
+		columnType.setCellEditor(new DefaultCellEditor(comboBox));
+		// Column Size
+		TableColumn columnSize = table_createTable.getColumnModel().getColumn(2);
+		columnSize.setCellEditor(new DefaultCellEditor(new JTextField()));
+		modelNewDBTable.addRow(new Object[]{});
+		table_createTable.setRowHeight(20);
+		
+		scrollPane_2.setViewportView(table_createTable);
+		
+		JButton btn_createNewTable = new JButton("Create");
+		btn_createNewTable.addActionListener(new Btn_createNewTableActionListener());
+		btn_createNewTable.setBounds(384, 12, 98, 26);
+		panel_addTable.add(btn_createNewTable);
+		
+		JButton btn_deleteRow = new JButton("Delete row");
+		btn_deleteRow.addActionListener(new Btn_deleteRowActionListener());
+		btn_deleteRow.setBounds(132, 12, 98, 26);
+		panel_addTable.add(btn_deleteRow);
+		
 		panel_statusBar = new JPanel();
 		panel_statusBar.setBorder(new EtchedBorder(EtchedBorder.RAISED, null, null));
 		contentPane.add(panel_statusBar);
@@ -303,6 +372,43 @@ public class ProgramMain extends JFrame {
 			databaseManager.disconnect();
 			lbl_status.setText("Disconnected");
 			container.show(panel_slider, TAG_CONNECT);
+		}
+	}
+	
+	// Create new database Table
+	private class Btn_createTableActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent arg0) {
+			container.show(panel_slider, TAG_ADD_TABLE);
+		}
+	}
+	
+	// Add new row
+	private class Btn_addRowActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent arg0) {
+			modelNewDBTable.addRow(new Object[]{});
+		}
+	}
+	
+	// Creating table from JTable
+	private class Btn_createNewTableActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent arg0) {
+			String tableName = JOptionPane.showInputDialog("Enter table name:");
+			Vector<String> rowName = new Vector<>();
+			Vector<String> rowType = new Vector<>();
+			Vector<String> rowSize = new Vector<>();
+			for(int i = 0; i < table_createTable.getRowCount(); ++i) {
+				rowName.addElement(table_createTable.getValueAt(i, 0).toString());
+				rowType.addElement(table_createTable.getValueAt(i, 1).toString());
+				rowSize.addElement(table_createTable.getValueAt(i, 2).toString());
+			}
+			databaseManager.createTable(tableName, rowName, rowType, rowSize);
+		}
+	}
+	
+	// Delete row
+	private class Btn_deleteRowActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			modelNewDBTable.removeRow(table_createTable.getSelectedRow());
 		}
 	}
 	

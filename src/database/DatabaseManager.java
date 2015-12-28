@@ -111,6 +111,25 @@ public class DatabaseManager {
 		return false;
 	}
 	
+	public void createTable(String name, Vector<String> rowName,
+			Vector<String> rowType, Vector<String> rowSize) {
+		try {
+			String query = Table.create(name);
+			for(int i = 0; i < rowName.size(); ++i) {
+				query += rowName.elementAt(i) + " ";
+				query += rowType.elementAt(i) + "(";
+				query += rowSize.elementAt(i) + "), ";
+			}
+			query = query.substring(0, query.length() - 2);
+			query += ")";
+			//System.out.println(query);
+			statement.executeUpdate(query);
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	// Getting queries via classes
 	private static class Database {
 		
@@ -143,6 +162,10 @@ public class DatabaseManager {
 		
 		private static String show() {
 			return "SHOW TABLES";
+		}
+		
+		private static String create(String name) {
+			return "CREATE TABLE " + name + " ( ";
 		}
 	}
 }
