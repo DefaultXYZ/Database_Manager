@@ -371,6 +371,7 @@ public class ProgramMain extends JFrame {
 	private class Btn_refreshActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent arg0) {
 			fillListDatabases();
+			lbl_status.setText("List of databases refreshed");
 		}
 	}
 	
@@ -378,6 +379,7 @@ public class ProgramMain extends JFrame {
 	private class Btn_backActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent arg0) {
 			container.show(panel_slider, TAG_DATABASES);
+			lbl_status.setText("Connected");
 		}
 	}
 	
@@ -419,6 +421,8 @@ public class ProgramMain extends JFrame {
 			}
 			// Execute query
 			databaseManager.createTable(tableName, rowName, rowType, rowSize);
+			// Show status
+			lbl_status.setText("Table " + tableName + " was created");
 			// Show Panel Tables
 			container.show(panel_slider, TAG_TABLES);
 		}
@@ -434,8 +438,10 @@ public class ProgramMain extends JFrame {
 	// Drop table
 	private class BtnDropActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent arg0) {
-			databaseManager.dropTable(list_tables.getSelectedValue());
+			String table = list_tables.getSelectedValue();
+			databaseManager.dropTable(table);
 			fillListTables();
+			lbl_status.setText("Table " + table + " was deleted");
 		}
 	}
 	
