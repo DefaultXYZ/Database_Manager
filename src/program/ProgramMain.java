@@ -97,17 +97,17 @@ public class ProgramMain extends JFrame {
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
 		
-		JMenu mn_file = new JMenu("File");
-		menuBar.add(mn_file);
+		JMenu mn_connection = new JMenu("Connection");
+		menuBar.add(mn_connection);
 		
 		mnIt_connect = new JMenuItem("Connect");
 		mnIt_connect.addActionListener(new MntmConnectActionListener());
-		mn_file.add(mnIt_connect);
+		mn_connection.add(mnIt_connect);
 		
 		mnIt_disconnect = new JMenuItem("Disconnect");
 		mnIt_disconnect.addActionListener(new MnIt_disconnectActionListener());
 		mnIt_disconnect.setVisible(false);
-		mn_file.add(mnIt_disconnect);
+		mn_connection.add(mnIt_disconnect);
 		
 		mn_database = new JMenu("Database");
 		mn_database.setEnabled(false);
