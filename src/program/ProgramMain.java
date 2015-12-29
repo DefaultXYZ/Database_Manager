@@ -228,6 +228,11 @@ public class ProgramMain extends JFrame {
 		btnDrop.setBounds(324, 12, 98, 26);
 		panel_tables.add(btnDrop);
 		
+		JButton btnUse = new JButton("Use");
+		btnUse.addActionListener(new BtnUseActionListener());
+		btnUse.setBounds(199, 53, 98, 26);
+		panel_tables.add(btnUse);
+		
 		panel_addTable = new JPanel();
 		panel_addTable.addComponentListener(new Panel_addTableComponentListener());
 		panel_slider.add(panel_addTable, TAG_ADD_TABLE);
@@ -512,6 +517,16 @@ public class ProgramMain extends JFrame {
 			fillListDatabases();
 			mnIt_tables.setEnabled(false);
 			mnIt_databases.setEnabled(true);
+		}
+	}
+	
+	// Open Table
+	private class BtnUseActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent arg0) {
+			String table = list_tables.getSelectedValue();
+			if(table != null) {
+				
+			}
 		}
 	}
 	
