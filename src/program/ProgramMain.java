@@ -38,13 +38,14 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 @SuppressWarnings("serial")
 public class ProgramMain extends JFrame {
 
 	private final static String TAG_CONNECT = "CONNECT";
 	private final static String TAG_DATABASES = "DATABASES";
-	private final static String TAG_TABLES = "TABLES";
 	private final static String TAG_ADD_TABLE = "ADD_TABLE";
 	
 	private JLayeredPane panel_slider;
@@ -58,16 +59,15 @@ public class ProgramMain extends JFrame {
 	private JPanel panel_statusBar;
 	private JList<String> list_databases;
 	private JPanel panel_databases;
-	private JPanel panel_tables;
 	private JList<String> list_tables;
 	private JMenuItem mnIt_connect;
-	private JMenuItem mnIt_databases;
-	private JMenuItem mnIt_tables;
-	private JButton btn_backTable;
 	private JPanel panel_addTable;
-	private JButton btn_addRow;
 	private DefaultTableModel modelNewDBTable;
-	private JTable table_createTable;
+	private JTable table;
+	private JMenu mn_database;
+	private JMenu mn_table;
+	private JMenu mn_rows;
+	private JMenuItem mnIt_disconnect;
 	/**
 	 * Launch the application.
 	 */
@@ -100,19 +100,62 @@ public class ProgramMain extends JFrame {
 		JMenu mn_file = new JMenu("File");
 		menuBar.add(mn_file);
 		
-		mnIt_connect = new JMenuItem("Connect...");
+		mnIt_connect = new JMenuItem("Connect");
 		mnIt_connect.addActionListener(new MntmConnectActionListener());
 		mn_file.add(mnIt_connect);
 		
-		mnIt_databases = new JMenuItem("Databases");
-		mnIt_databases.addActionListener(new MnIt_databasesActionListener());
-		mnIt_databases.setEnabled(false);
-		mn_file.add(mnIt_databases);
+		mnIt_disconnect = new JMenuItem("Disconnect");
+		mnIt_disconnect.addActionListener(new MnIt_disconnectActionListener());
+		mnIt_disconnect.setVisible(false);
+		mn_file.add(mnIt_disconnect);
 		
-		mnIt_tables = new JMenuItem("Tables");
-		mnIt_tables.addActionListener(new MnIt_tablesActionListener());
-		mnIt_tables.setEnabled(false);
-		mn_file.add(mnIt_tables);
+		mn_database = new JMenu("Database");
+		mn_database.setEnabled(false);
+		menuBar.add(mn_database);
+		
+		JMenuItem mntmDbShowList = new JMenuItem("Show list");
+		mntmDbShowList.addActionListener(new MntmDbShowListActionListener());
+		mn_database.add(mntmDbShowList);
+		
+		JMenuItem mntmDbCreate = new JMenuItem("Create");
+		mntmDbCreate.addActionListener(new MntmDbCreateActionListener());
+		mn_database.add(mntmDbCreate);
+		
+		JMenuItem mntmDbDrop = new JMenuItem("Drop");
+		mntmDbDrop.addActionListener(new MntmDbDropActionListener());
+		mn_database.add(mntmDbDrop);
+		
+		mn_table = new JMenu("Table");
+		mn_table.setEnabled(false);
+		menuBar.add(mn_table);
+		
+		JMenuItem mntmTabShowList = new JMenuItem("Show list");
+		mntmTabShowList.addActionListener(new MntmTabShowListActionListener());
+		mn_table.add(mntmTabShowList);
+		
+		JMenuItem mntmTabCreate = new JMenuItem("Create");
+		mntmTabCreate.addActionListener(new MntmTabCreateActionListener());
+		mn_table.add(mntmTabCreate);
+		
+		JMenuItem mntmTabDrop = new JMenuItem("Drop");
+		mntmTabDrop.addActionListener(new MntmTabDropActionListener());
+		mn_table.add(mntmTabDrop);
+		
+		mn_rows = new JMenu("Rows");
+		mn_rows.setEnabled(false);
+		menuBar.add(mn_rows);
+		
+		JMenuItem mntmAddRow = new JMenuItem("Add row");
+		mntmAddRow.addActionListener(new MntmAddRowActionListener());
+		mn_rows.add(mntmAddRow);
+		
+		JMenuItem mntmAddRows = new JMenuItem("Add rows");
+		mntmAddRows.addActionListener(new MntmAddRowsActionListener());
+		mn_rows.add(mntmAddRows);
+		
+		JMenuItem mntmDeleteRow = new JMenuItem("Delete row");
+		mntmDeleteRow.addActionListener(new MntmDeleteRowActionListener());
+		mn_rows.add(mntmDeleteRow);
 		
 		contentPane = new JPanel();
 		setContentPane(contentPane);
@@ -161,6 +204,7 @@ public class ProgramMain extends JFrame {
 		panel_databases.add(scrollPane);
 		
 		list_databases = new JList<String>();
+		list_databases.addMouseListener(new List_databasesMouseListener());
 		list_databases.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		scrollPane.setViewportView(list_databases);
 		
@@ -169,79 +213,29 @@ public class ProgramMain extends JFrame {
 		lbl_databases.setBounds(12, 65, 89, 16);
 		panel_databases.add(lbl_databases);
 		
-		JButton btn_create = new JButton("Create");
-		btn_create.addActionListener(new BtnCreateActionListener());
-		btn_create.setBounds(205, 44, 98, 26);
-		panel_databases.add(btn_create);
-		
-		JButton btn_drop = new JButton("Drop");
-		btn_drop.addActionListener(new Btn_dropActionListener());
-		btn_drop.setBounds(315, 44, 98, 26);
-		panel_databases.add(btn_drop);
-		
-		JButton btn_use = new JButton("Use");
-		btn_use.addActionListener(new Btn_useActionListener());
-		btn_use.setBounds(205, 82, 98, 26);
-		panel_databases.add(btn_use);
-		
-		JButton btn_refresh = new JButton("Refresh");
-		btn_refresh.addActionListener(new Btn_refreshActionListener());
-		btn_refresh.setBounds(315, 82, 98, 26);
-		panel_databases.add(btn_refresh);
-		
 		JButton btn_backDb = new JButton("Back");
 		btn_backDb.addActionListener(new Btn_backDbActionListener());
 		btn_backDb.setBounds(12, 12, 98, 26);
 		panel_databases.add(btn_backDb);
 		
+		JScrollPane scrollPane_3 = new JScrollPane();
+		scrollPane_3.setBounds(247, 93, 193, 263);
+		panel_databases.add(scrollPane_3);
+		
+		JLabel lblTables = new JLabel("Tables");
+		lblTables.setBounds(247, 65, 55, 16);
+		panel_databases.add(lblTables);
+		
 		// For accessing to all panels
 		container = (CardLayout) panel_slider.getLayout();
 		
-		panel_tables = new JPanel();
-		panel_tables.addComponentListener(new Panel_tablesComponentListener());
-		panel_slider.add(panel_tables, TAG_TABLES);
-		panel_tables.setLayout(null);
-		
-		JScrollPane scrollPane_1 = new JScrollPane();
-		scrollPane_1.setBounds(12, 81, 165, 275);
-		panel_tables.add(scrollPane_1);
-		
 		list_tables = new JList<String>();
-		scrollPane_1.setViewportView(list_tables);
-		
-		JLabel lbl_tables = new JLabel("Tables");
-		lbl_tables.setBounds(12, 53, 55, 16);
-		panel_tables.add(lbl_tables);
-		
-		btn_backTable = new JButton("Back");
-		btn_backTable.addActionListener(new Btn_backActionListener());
-		btn_backTable.setBounds(12, 12, 98, 26);
-		panel_tables.add(btn_backTable);
-		
-		JButton btn_createTable = new JButton("Create");
-		btn_createTable.addActionListener(new Btn_createTableActionListener());
-		btn_createTable.setBounds(199, 12, 98, 26);
-		panel_tables.add(btn_createTable);
-		
-		JButton btnDrop = new JButton("Drop");
-		btnDrop.addActionListener(new BtnDropActionListener());
-		btnDrop.setBounds(324, 12, 98, 26);
-		panel_tables.add(btnDrop);
-		
-		JButton btnUse = new JButton("Use");
-		btnUse.addActionListener(new BtnUseActionListener());
-		btnUse.setBounds(199, 53, 98, 26);
-		panel_tables.add(btnUse);
+		scrollPane_3.setViewportView(list_tables);
 		
 		panel_addTable = new JPanel();
 		panel_addTable.addComponentListener(new Panel_addTableComponentListener());
 		panel_slider.add(panel_addTable, TAG_ADD_TABLE);
 		panel_addTable.setLayout(null);
-		
-		btn_addRow = new JButton("Add row");
-		btn_addRow.addActionListener(new Btn_addRowActionListener());
-		btn_addRow.setBounds(134, 13, 98, 26);
-		panel_addTable.add(btn_addRow);
 		
 		JScrollPane scrollPane_2 = new JScrollPane();
 		scrollPane_2.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -249,41 +243,36 @@ public class ProgramMain extends JFrame {
 		panel_addTable.add(scrollPane_2);
 		
 		
-		table_createTable = new JTable();
-		table_createTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		table = new JTable();
+		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
 		modelNewDBTable = new DefaultTableModel();
 		modelNewDBTable.addColumn("Name");
 		modelNewDBTable.addColumn("Type");
 		modelNewDBTable.addColumn("Size");
-		table_createTable.setModel(modelNewDBTable);
+		table.setModel(modelNewDBTable);
 		
 		// Column Name
-		TableColumn columnName = table_createTable.getColumnModel().getColumn(0);
+		TableColumn columnName = table.getColumnModel().getColumn(0);
 		columnName.setCellEditor(new DefaultCellEditor(new JTextField()));
 		// Column Type
-		TableColumn columnType = table_createTable.getColumnModel().getColumn(1);
+		TableColumn columnType = table.getColumnModel().getColumn(1);
 		JComboBox<String> comboBox = new JComboBox<>();
 		comboBox.addItem("CHAR");
 		comboBox.addItem("INT");
 		columnType.setCellEditor(new DefaultCellEditor(comboBox));
 		// Column Size
-		TableColumn columnSize = table_createTable.getColumnModel().getColumn(2);
+		TableColumn columnSize = table.getColumnModel().getColumn(2);
 		columnSize.setCellEditor(new DefaultCellEditor(new JTextField()));
 		modelNewDBTable.addRow(new Object[]{});
-		table_createTable.setRowHeight(20);
+		table.setRowHeight(20);
 		
-		scrollPane_2.setViewportView(table_createTable);
+		scrollPane_2.setViewportView(table);
 		
-		JButton btn_createNewTable = new JButton("Create");
-		btn_createNewTable.addActionListener(new Btn_createNewTableActionListener());
-		btn_createNewTable.setBounds(384, 13, 98, 26);
-		panel_addTable.add(btn_createNewTable);
-		
-		JButton btn_deleteRow = new JButton("Delete row");
-		btn_deleteRow.addActionListener(new Btn_deleteRowActionListener());
-		btn_deleteRow.setBounds(254, 13, 98, 26);
-		panel_addTable.add(btn_deleteRow);
+		JButton btn_confirm = new JButton("Confirm");
+		btn_confirm.addActionListener(new Btn_createNewTableActionListener());
+		btn_confirm.setBounds(384, 13, 98, 26);
+		panel_addTable.add(btn_confirm);
 		
 		JButton btn_backToTables = new JButton("Back");
 		btn_backToTables.addActionListener(new Btn_backToTablesActionListener());
@@ -319,72 +308,20 @@ public class ProgramMain extends JFrame {
 		}
 	}
 	
-	// Return to Connection Panel
+	// Menu Item Connect
 	private class MntmConnectActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
-			container.show(panel_slider, TAG_CONNECT);
-		}
-	}
-	
-	// Creating new database
-	private class BtnCreateActionListener implements ActionListener {
-		public void actionPerformed(ActionEvent arg0) {
-			// Enter name for database
-			String newName = JOptionPane.showInputDialog("Enter new name:");
-			if(newName != null) {
-				// Execute query
-				databaseManager.createDB(newName);
-				// Refresh list of databases
-				fillListDatabases();
-				// Show status
-				lbl_status.setText("Database " + newName + " created");
+			// Class for managing databases
+			databaseManager = new DatabaseManager(tF_user.getText(),
+					tF_pass.getText());
+			databaseManager.connect();
+			// If connected, get all databases
+			if(databaseManager.isConnected()) {
+				lbl_status.setText("Connection is successful");
+				container.show(panel_slider, TAG_DATABASES);
+			} else {
+				lbl_status.setText("Connection is failed");
 			}
-		}
-	}
-	
-	// Deleting database
-	private class Btn_dropActionListener implements ActionListener {
-		public void actionPerformed(ActionEvent e) {
-			if(!list_databases.isSelectionEmpty()) {
-				// Get selected database
-				String db = list_databases.getSelectedValue();
-				// Execute query
-				databaseManager.dropDB(db);
-				// Refresh
-				fillListDatabases();
-				// Status
-				lbl_status.setText("Database " + db + " deleted");
-			}
-		}
-	}
-	
-	// Using database
-	private class Btn_useActionListener implements ActionListener {
-		public void actionPerformed(ActionEvent arg0) {
-			if(!list_databases.isSelectionEmpty()) {
-				// Get selected database
-				String db = list_databases.getSelectedValue();
-				// Execute query
-				databaseManager.useDB(db);
-				container.show(panel_slider, TAG_TABLES);
-				lbl_status.setText("Using database " + db);
-			}
-		}
-	}
-	
-	// Refresh List of Databases
-	private class Btn_refreshActionListener implements ActionListener {
-		public void actionPerformed(ActionEvent arg0) {
-			fillListDatabases();
-			lbl_status.setText("List of databases refreshed");
-		}
-	}
-	
-	// Back to Databases
-	private class Btn_backActionListener implements ActionListener {
-		public void actionPerformed(ActionEvent arg0) {
-			container.show(panel_slider, TAG_DATABASES);
-			lbl_status.setText("Connected");
 		}
 	}
 	
@@ -395,21 +332,7 @@ public class ProgramMain extends JFrame {
 		}
 	}
 	
-	// Create new database Table
-	private class Btn_createTableActionListener implements ActionListener {
-		public void actionPerformed(ActionEvent arg0) {
-			container.show(panel_slider, TAG_ADD_TABLE);
-		}
-	}
-	
-	// Add new row
-	private class Btn_addRowActionListener implements ActionListener {
-		public void actionPerformed(ActionEvent arg0) {
-			modelNewDBTable.addRow(new Object[]{});
-		}
-	}
-	
-	// Creating table from JTable
+	// Confirm changes
 	private class Btn_createNewTableActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent arg0) {
 			// Get table name
@@ -419,58 +342,25 @@ public class ProgramMain extends JFrame {
 			Vector<String> rowType = new Vector<>();
 			Vector<String> rowSize = new Vector<>();
 			// Get data from table
-			for(int i = 0; i < table_createTable.getRowCount(); ++i) {
-				rowName.addElement(table_createTable.getValueAt(i, 0).toString());
-				rowType.addElement(table_createTable.getValueAt(i, 1).toString());
-				rowSize.addElement(table_createTable.getValueAt(i, 2).toString());
+			for(int i = 0; i < table.getRowCount(); ++i) {
+				rowName.addElement(table.getValueAt(i, 0).toString());
+				rowType.addElement(table.getValueAt(i, 1).toString());
+				rowSize.addElement(table.getValueAt(i, 2).toString());
 			}
 			// Execute query
 			databaseManager.createTable(tableName, rowName, rowType, rowSize);
 			// Show status
 			lbl_status.setText("Table " + tableName + " was created");
 			// Show Panel Tables
-			container.show(panel_slider, TAG_TABLES);
-		}
-	}
-	
-	// Delete row
-	private class Btn_deleteRowActionListener implements ActionListener {
-		public void actionPerformed(ActionEvent e) {
-			modelNewDBTable.removeRow(table_createTable.getSelectedRow());
-		}
-	}
-	
-	// Drop table
-	private class BtnDropActionListener implements ActionListener {
-		public void actionPerformed(ActionEvent arg0) {
-			String table = list_tables.getSelectedValue();
-			databaseManager.dropTable(table);
-			fillListTables();
-			lbl_status.setText("Table " + table + " was deleted");
-		}
-	}
-	
-	// Menu Item - Database
-	private class MnIt_databasesActionListener implements ActionListener {
-		public void actionPerformed(ActionEvent e) {
 			container.show(panel_slider, TAG_DATABASES);
-			mnIt_tables.setEnabled(false);
 		}
 	}
 	
-	// Menu Item - Tables
-	private class MnIt_tablesActionListener implements ActionListener {
-		public void actionPerformed(ActionEvent e) {
-			container.show(panel_slider, TAG_TABLES);
-			mnIt_tables.setEnabled(true);
-		}
-	}
-	
-	// Back From Creating new table to Tables
+	// Back From Creating new table to Lists
 	private class Btn_backToTablesActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			// Show Panel Tables
-			container.show(panel_slider, TAG_TABLES);
+			container.show(panel_slider, TAG_DATABASES);
 		}
 	}
 	
@@ -483,21 +373,13 @@ public class ProgramMain extends JFrame {
 				modelNewDBTable.removeRow(i);
 			}
 			modelNewDBTable.addRow(new Object[]{});
+			mn_rows.setEnabled(false);
 		}
 	}
 	
-	// When Panel Tables Shown
-	private class Panel_tablesComponentListener extends ComponentAdapter {
-		@Override
-		public void componentShown(ComponentEvent e) {
-			// Refresh list of Tables
-			fillListTables();
-			mnIt_tables.setEnabled(true);
-		}
-	}
-	
-	// When Panel Connection Shown
+	// Panel Connection
 	private class Panel_connectComponentListener extends ComponentAdapter {
+		// When Panel Connection Shown
 		@Override
 		public void componentShown(ComponentEvent e) {
 			// Disconnect
@@ -505,8 +387,17 @@ public class ProgramMain extends JFrame {
 			// Show status
 			lbl_status.setText("Disconnected");
 			// Change enabling in menu
-			mnIt_databases.setEnabled(false);
-			mnIt_tables.setEnabled(false);
+			mn_table.setEnabled(false);
+			mn_database.setEnabled(false);
+			mnIt_connect.setVisible(true);
+			mnIt_disconnect.setVisible(false);
+		}
+		
+		// When Panel Connection Hidden
+		@Override
+		public void componentHidden(ComponentEvent e) {
+			mnIt_connect.setVisible(false);
+			mnIt_disconnect.setVisible(true);
 		}
 	}
 	
@@ -514,24 +405,125 @@ public class ProgramMain extends JFrame {
 	private class Panel_databasesComponentListener extends ComponentAdapter {
 		@Override
 		public void componentShown(ComponentEvent e) {
-			fillListDatabases();
-			mnIt_tables.setEnabled(false);
-			mnIt_databases.setEnabled(true);
+			refreshListDatabases();
+			list_tables.setModel(new DefaultListModel<>());
+			/*
+			if(databaseManager.isDatabaseUsed()) {
+				mn_table.setEnabled(true);
+				refreshListTables();
+			}*/
+			mn_database.setEnabled(true);
+			mn_rows.setEnabled(false);
 		}
 	}
 	
-	// Open Table
-	private class BtnUseActionListener implements ActionListener {
-		public void actionPerformed(ActionEvent arg0) {
-			String table = list_tables.getSelectedValue();
-			if(table != null) {
-				
+	// DoubleClick on list of databases item
+	private class List_databasesMouseListener extends MouseAdapter {
+		@Override
+		public void mouseClicked(MouseEvent mEvent) {
+			if(mEvent.getClickCount() == 2) {
+				String database = list_databases.getSelectedValue();
+				if(!database.isEmpty()) {
+					databaseManager.useDB(database);
+					// Refresh list of Tables
+					refreshListTables();
+					mn_table.setEnabled(true);
+				}
 			}
 		}
 	}
 	
+	// Create new Database
+	private class MntmDbCreateActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent arg0) {
+			String database = JOptionPane.showInputDialog("Enter database name");
+			databaseManager.createDB(database);
+			refreshListDatabases();
+		}
+	}
+	
+	// Drop database
+	private class MntmDbDropActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			String database = list_databases.getSelectedValue();
+			if(!database.isEmpty()) {
+				databaseManager.dropDB(database);
+				refreshListDatabases();
+			}
+		}
+	}
+	
+	// Show list of databases
+	private class MntmDbShowListActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			container.show(panel_slider, TAG_DATABASES);
+		}
+	}
+	
+	// Show list of tables
+	private class MntmTabShowListActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			if(databaseManager.isDatabaseUsed()) {
+				container.show(panel_slider, TAG_DATABASES);
+				refreshListTables();
+			}
+		}
+	}
+	
+	// Create new Table
+	private class MntmTabCreateActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			container.show(panel_slider, TAG_ADD_TABLE);
+			mn_rows.setEnabled(true);
+		}
+	}
+	
+	// Drop Table
+	private class MntmTabDropActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			String table = list_tables.getSelectedValue();
+			if(!table.isEmpty()) {
+				databaseManager.dropTable(table);
+				refreshListTables();
+			}
+		}
+	}
+	
+	// Add new row
+	private class MntmAddRowActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			modelNewDBTable.addRow(new Object[]{});
+		}
+	}
+	
+	// Add many rows
+	private class MntmAddRowsActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			String count = JOptionPane.showInputDialog("Enter count:");
+			if(!count.isEmpty()) {
+				for(int i = 0; i <= Integer.parseInt(count); ++i) {
+					modelNewDBTable.addRow(new Object[]{});
+				}
+			}
+		}
+	}
+	
+	// Delete row
+	private class MntmDeleteRowActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			modelNewDBTable.removeRow(table.getSelectedRow());
+		}
+	}
+	
+	// Menu Item Disconnect
+	private class MnIt_disconnectActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			container.show(panel_slider, TAG_CONNECT);
+		}
+	}
+	
 	// Getting list of databases
-	private void fillListDatabases() {
+	private void refreshListDatabases() {
 		// For sending list to JList
 		DefaultListModel<String> model = new DefaultListModel<>();
 		// Contains database list
@@ -547,7 +539,7 @@ public class ProgramMain extends JFrame {
 	}
 	
 	// Getting list of tables
-	private void fillListTables() {
+	private void refreshListTables() {
 		if(databaseManager.isDatabaseUsed()) {
 			DefaultListModel<String> model = new DefaultListModel<>();
 			Vector<String> tables = databaseManager.showTables();
