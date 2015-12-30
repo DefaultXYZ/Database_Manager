@@ -112,17 +112,15 @@ public class DatabaseManager {
 	}
 	
 	public void createTable(String name, Vector<String> rowName,
-			Vector<String> rowType, Vector<String> rowSize) {
+			Vector<String> rowType) {
 		try {
 			String query = Table.create(name);
 			for(int i = 0; i < rowName.size(); ++i) {
 				query += rowName.elementAt(i) + " ";
-				query += rowType.elementAt(i) + "(";
-				query += rowSize.elementAt(i) + "), ";
+				query += rowType.elementAt(i) + ", ";
 			}
 			query = query.substring(0, query.length() - 2);
 			query += ")";
-			//System.out.println(query);
 			statement.executeUpdate(query);
 			
 		} catch(Exception e) {
@@ -136,6 +134,64 @@ public class DatabaseManager {
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public void updateRow(String tableName, Vector<String> data, String[] notChanged) {
+		try {
+			ResultSet resultSet = statement.executeQuery(Table.getColumnsName(tableName));
+			Vector<String> columnName = new Vector<>();
+			while(resultSet.next()) {
+				columnName.addElement(resultSet.getString(1));
+			}
+			String sql = Table.update(tableName);
+			for(int i = 0; i < columnName.size(); ++i) {
+				sql += columnName.elementAt(i) + " = '" + data.elementAt(i) + "', ";
+			}
+			sql = sql.substring(0, sql.length() - 2);
+			sql += " WHERE " + notChanged[0] + " = '" + notChanged[1] + "'";
+			statement.executeUpdate(sql);
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public Vector<String> getColumnsType(String tableName) {
+		try {
+			Vector<String> types = new Vector<>();
+			ResultSet resultSet = statement.executeQuery(Table.getColumnsType(tableName));
+			while(resultSet.next()) {
+				types.addElement(resultSet.getString(1));
+			}
+			return types;
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public Vector<Vector<String>> selectTable(String name) {
+		try {
+			Vector<Vector<String>> data = new Vector<>();
+			String sql = Table.select(name);
+			Vector<String> columnNames = getColumnsType(name);
+			for(String columnName : columnNames) {
+				sql += columnName + ", ";
+			}
+			sql = sql.substring(0, sql.length() - 2);
+			sql += " FROM " + name;
+			ResultSet resultSet = statement.executeQuery(sql);
+			while(resultSet.next()) {
+				Vector<String> row = new Vector<>();
+				for(String column : columnNames) {
+					row.addElement(resultSet.getString(column));
+				}
+				data.addElement(row);
+			}
+			return data;
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	// Getting queries via classes
@@ -158,7 +214,7 @@ public class DatabaseManager {
 		}
 		
 		private static String used() {
-			return "SELECT DATABASE() FROM DUAL";
+			return "SELECT DATABASE()";
 		}
 	}
 	
@@ -173,6 +229,22 @@ public class DatabaseManager {
 		
 		private static String create(String name) {
 			return "CREATE TABLE " + name + " ( ";
+		}
+		
+		private static String update(String name) {
+			return "UPDATE " + name + " SET ";
+		}
+		
+		private static String getColumnsName(String name) {
+			return "SELECT column_name FROM information_schema.columns WHERE table_name = '" + name +"'"; 
+		}
+		
+		private static String getColumnsType(String name) {
+			return "SELECT data_type FROM information_schema.columns WHERE table_name = '" + name +"'";
+		}
+		
+		private static String select(String name) {
+			return "SELECT ";
 		}
 	}
 }

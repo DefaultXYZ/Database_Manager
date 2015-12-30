@@ -48,6 +48,8 @@ public class ProgramMain extends JFrame {
 	private final static String TAG_DATABASES = "DATABASES";
 	private final static String TAG_ADD_TABLE = "ADD_TABLE";
 	
+	private boolean isCreating;
+	
 	private JLayeredPane panel_slider;
 	private CardLayout container;
 	private JPanel panel_connect;
@@ -61,7 +63,7 @@ public class ProgramMain extends JFrame {
 	private JPanel panel_databases;
 	private JList<String> list_tables;
 	private JMenuItem mnIt_connect;
-	private JPanel panel_addTable;
+	private JPanel panel_table;
 	private DefaultTableModel modelNewDBTable;
 	private JTable table;
 	private JMenu mn_database;
@@ -230,17 +232,18 @@ public class ProgramMain extends JFrame {
 		container = (CardLayout) panel_slider.getLayout();
 		
 		list_tables = new JList<String>();
+		list_tables.addMouseListener(new List_tablesMouseListener());
 		scrollPane_3.setViewportView(list_tables);
 		
-		panel_addTable = new JPanel();
-		panel_addTable.addComponentListener(new Panel_addTableComponentListener());
-		panel_slider.add(panel_addTable, TAG_ADD_TABLE);
-		panel_addTable.setLayout(null);
+		panel_table = new JPanel();
+		panel_table.addComponentListener(new Panel_addTableComponentListener());
+		panel_slider.add(panel_table, TAG_ADD_TABLE);
+		panel_table.setLayout(null);
 		
 		JScrollPane scrollPane_2 = new JScrollPane();
 		scrollPane_2.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		scrollPane_2.setBounds(12, 50, 470, 316);
-		panel_addTable.add(scrollPane_2);
+		panel_table.add(scrollPane_2);
 		
 		
 		table = new JTable();
@@ -249,7 +252,6 @@ public class ProgramMain extends JFrame {
 		modelNewDBTable = new DefaultTableModel();
 		modelNewDBTable.addColumn("Name");
 		modelNewDBTable.addColumn("Type");
-		modelNewDBTable.addColumn("Size");
 		table.setModel(modelNewDBTable);
 		
 		// Column Name
@@ -259,11 +261,11 @@ public class ProgramMain extends JFrame {
 		TableColumn columnType = table.getColumnModel().getColumn(1);
 		JComboBox<String> comboBox = new JComboBox<>();
 		comboBox.addItem("CHAR");
+		comboBox.addItem("TEXT");
 		comboBox.addItem("INT");
+		comboBox.addItem("FLOAT");
 		columnType.setCellEditor(new DefaultCellEditor(comboBox));
-		// Column Size
-		TableColumn columnSize = table.getColumnModel().getColumn(2);
-		columnSize.setCellEditor(new DefaultCellEditor(new JTextField()));
+		
 		modelNewDBTable.addRow(new Object[]{});
 		table.setRowHeight(20);
 		
@@ -272,12 +274,12 @@ public class ProgramMain extends JFrame {
 		JButton btn_confirm = new JButton("Confirm");
 		btn_confirm.addActionListener(new Btn_createNewTableActionListener());
 		btn_confirm.setBounds(384, 13, 98, 26);
-		panel_addTable.add(btn_confirm);
+		panel_table.add(btn_confirm);
 		
 		JButton btn_backToTables = new JButton("Back");
 		btn_backToTables.addActionListener(new Btn_backToTablesActionListener());
 		btn_backToTables.setBounds(12, 15, 89, 23);
-		panel_addTable.add(btn_backToTables);
+		panel_table.add(btn_backToTables);
 		
 		panel_statusBar = new JPanel();
 		panel_statusBar.setBorder(new EtchedBorder(EtchedBorder.RAISED, null, null));
@@ -335,28 +337,30 @@ public class ProgramMain extends JFrame {
 	// Confirm changes
 	private class Btn_createNewTableActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent arg0) {
-			// Get table name
-			String tableName = JOptionPane.showInputDialog("Enter table name:");
-			
-			Vector<String> rowName = new Vector<>();
-			Vector<String> rowType = new Vector<>();
-			Vector<String> rowSize = new Vector<>();
-			// Get data from table
-			for(int i = 0; i < table.getRowCount(); ++i) {
-				rowName.addElement(table.getValueAt(i, 0).toString());
-				rowType.addElement(table.getValueAt(i, 1).toString());
-				rowSize.addElement(table.getValueAt(i, 2).toString());
+			if(isCreating) {
+				// Get table name
+				String tableName = JOptionPane.showInputDialog("Enter table name:");
+				
+				Vector<String> rowName = new Vector<>();
+				Vector<String> rowType = new Vector<>();
+				// Get data from table
+				for(int i = 0; i < modelNewDBTable.getRowCount(); ++i) {
+					rowName.addElement(modelNewDBTable.getValueAt(i, 0).toString());
+					rowType.addElement(modelNewDBTable.getValueAt(i, 1).toString());
+				}
+				// Execute query
+				databaseManager.createTable(tableName, rowName, rowType);
+				// Show status
+				lbl_status.setText("Table " + tableName + " was created");
+			} else {
+				
 			}
-			// Execute query
-			databaseManager.createTable(tableName, rowName, rowType, rowSize);
-			// Show status
-			lbl_status.setText("Table " + tableName + " was created");
 			// Show Panel Tables
 			container.show(panel_slider, TAG_DATABASES);
 		}
 	}
 	
-	// Back From Creating new table to Lists
+	// Back From Table to Lists
 	private class Btn_backToTablesActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			// Show Panel Tables
@@ -364,8 +368,9 @@ public class ProgramMain extends JFrame {
 		}
 	}
 	
-	// When Panel Create new Table Hide
+	// Panel Table
 	private class Panel_addTableComponentListener extends ComponentAdapter {
+		// When Hidden
 		@Override
 		public void componentHidden(ComponentEvent arg0) {
 			// Clear table
@@ -374,6 +379,14 @@ public class ProgramMain extends JFrame {
 			}
 			modelNewDBTable.addRow(new Object[]{});
 			mn_rows.setEnabled(false);
+		}
+		// When Shown
+		@Override
+		public void componentShown(ComponentEvent arg0) {
+			mn_rows.setEnabled(true);
+			if(!isCreating) {
+				
+			}
 		}
 	}
 	
@@ -407,11 +420,10 @@ public class ProgramMain extends JFrame {
 		public void componentShown(ComponentEvent e) {
 			refreshListDatabases();
 			list_tables.setModel(new DefaultListModel<>());
-			/*
 			if(databaseManager.isDatabaseUsed()) {
 				mn_table.setEnabled(true);
 				refreshListTables();
-			}*/
+			}
 			mn_database.setEnabled(true);
 			mn_rows.setEnabled(false);
 		}
@@ -464,8 +476,8 @@ public class ProgramMain extends JFrame {
 	private class MntmTabShowListActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			if(databaseManager.isDatabaseUsed()) {
-				container.show(panel_slider, TAG_DATABASES);
 				refreshListTables();
+				container.show(panel_slider, TAG_DATABASES);
 			}
 		}
 	}
@@ -474,7 +486,7 @@ public class ProgramMain extends JFrame {
 	private class MntmTabCreateActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			container.show(panel_slider, TAG_ADD_TABLE);
-			mn_rows.setEnabled(true);
+			isCreating = true;
 		}
 	}
 	
@@ -519,6 +531,20 @@ public class ProgramMain extends JFrame {
 	private class MnIt_disconnectActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			container.show(panel_slider, TAG_CONNECT);
+		}
+	}
+	
+	// DoubleClick on table
+	private class List_tablesMouseListener extends MouseAdapter {
+		@Override
+		public void mouseClicked(MouseEvent mouseEvent) {
+			if(mouseEvent.getClickCount() == 2) {
+				String table = list_tables.getSelectedValue();
+				if(!table.isEmpty()) {
+					isCreating = false;
+					container.show(panel_slider, TAG_ADD_TABLE);
+				}
+			}
 		}
 	}
 	
