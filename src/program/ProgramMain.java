@@ -248,25 +248,6 @@ public class ProgramMain extends JFrame {
 		
 		table = new JTable();
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		
-		modelNewDBTable = new DefaultTableModel();
-		modelNewDBTable.addColumn("Name");
-		modelNewDBTable.addColumn("Type");
-		table.setModel(modelNewDBTable);
-		
-		// Column Name
-		TableColumn columnName = table.getColumnModel().getColumn(0);
-		columnName.setCellEditor(new DefaultCellEditor(new JTextField()));
-		// Column Type
-		TableColumn columnType = table.getColumnModel().getColumn(1);
-		JComboBox<String> comboBox = new JComboBox<>();
-		comboBox.addItem("CHAR");
-		comboBox.addItem("TEXT");
-		comboBox.addItem("INT");
-		comboBox.addItem("FLOAT");
-		columnType.setCellEditor(new DefaultCellEditor(comboBox));
-		
-		modelNewDBTable.addRow(new Object[]{});
 		table.setRowHeight(20);
 		
 		scrollPane_2.setViewportView(table);
@@ -373,20 +354,26 @@ public class ProgramMain extends JFrame {
 		// When Hidden
 		@Override
 		public void componentHidden(ComponentEvent arg0) {
-			// Clear table
-			for(int i = 0; i < modelNewDBTable.getRowCount(); ++i) {
-				modelNewDBTable.removeRow(i);
+			if(modelNewDBTable != null) {
+				// Clear table
+				for(int i = 0; i < modelNewDBTable.getRowCount(); ++i) {
+					modelNewDBTable.removeRow(i);
+				}
+				mn_rows.setEnabled(false);
 			}
-			modelNewDBTable.addRow(new Object[]{});
-			mn_rows.setEnabled(false);
 		}
 		// When Shown
 		@Override
 		public void componentShown(ComponentEvent arg0) {
 			mn_rows.setEnabled(true);
-			if(!isCreating) {
-				
+			// NEED TO FIX PROBLEMS!!!!
+			/*
+			if(isCreating) {
+				setModelNewTable();
+			} else {
+				setModelShowTable();
 			}
+			*/
 		}
 	}
 	
@@ -420,7 +407,7 @@ public class ProgramMain extends JFrame {
 		public void componentShown(ComponentEvent e) {
 			refreshListDatabases();
 			list_tables.setModel(new DefaultListModel<>());
-			if(databaseManager.isDatabaseUsed()) {
+			if(databaseManager.isDatabaseUsed) {
 				mn_table.setEnabled(true);
 				refreshListTables();
 			}
@@ -440,6 +427,7 @@ public class ProgramMain extends JFrame {
 					// Refresh list of Tables
 					refreshListTables();
 					mn_table.setEnabled(true);
+					lbl_status.setText("Database " + database + " used");
 				}
 			}
 		}
@@ -457,8 +445,8 @@ public class ProgramMain extends JFrame {
 	// Drop database
 	private class MntmDbDropActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
-			String database = list_databases.getSelectedValue();
-			if(!database.isEmpty()) {
+			if(!list_databases.isSelectionEmpty()) {
+				String database = list_databases.getSelectedValue();
 				databaseManager.dropDB(database);
 				refreshListDatabases();
 			}
@@ -475,7 +463,7 @@ public class ProgramMain extends JFrame {
 	// Show list of tables
 	private class MntmTabShowListActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
-			if(databaseManager.isDatabaseUsed()) {
+			if(databaseManager.isDatabaseUsed) {
 				refreshListTables();
 				container.show(panel_slider, TAG_DATABASES);
 			}
@@ -493,10 +481,11 @@ public class ProgramMain extends JFrame {
 	// Drop Table
 	private class MntmTabDropActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
-			String table = list_tables.getSelectedValue();
-			if(!table.isEmpty()) {
+			if(!list_tables.isSelectionEmpty()) {
+				String table = list_tables.getSelectedValue();
 				databaseManager.dropTable(table);
 				refreshListTables();
+				lbl_status.setText("Table " + table + " was deleted");
 			}
 		}
 	}
@@ -543,6 +532,7 @@ public class ProgramMain extends JFrame {
 				if(!table.isEmpty()) {
 					isCreating = false;
 					container.show(panel_slider, TAG_ADD_TABLE);
+					lbl_status.setText("Table " + table + " used");
 				}
 			}
 		}
@@ -566,7 +556,7 @@ public class ProgramMain extends JFrame {
 	
 	// Getting list of tables
 	private void refreshListTables() {
-		if(databaseManager.isDatabaseUsed()) {
+		if(databaseManager.isDatabaseUsed) {
 			DefaultListModel<String> model = new DefaultListModel<>();
 			Vector<String> tables = databaseManager.showTables();
 			if(tables != null) {
@@ -576,5 +566,35 @@ public class ProgramMain extends JFrame {
 			}
 			list_tables.setModel(model);
 		}
+	}
+	
+	// Setting model for creating new table
+	private void setModelNewTable() {
+		modelNewDBTable = new DefaultTableModel();
+		modelNewDBTable.addColumn("Name");
+		modelNewDBTable.addColumn("Type");
+		table.setModel(modelNewDBTable);
+		
+		// Column Name
+		TableColumn columnName = table.getColumnModel().getColumn(0);
+		columnName.setCellEditor(new DefaultCellEditor(new JTextField()));
+		// Column Type
+		TableColumn columnType = table.getColumnModel().getColumn(1);
+		JComboBox<String> comboBox = new JComboBox<>();
+		comboBox.addItem("CHAR");
+		comboBox.addItem("TEXT");
+		comboBox.addItem("INT");
+		comboBox.addItem("FLOAT");
+		columnType.setCellEditor(new DefaultCellEditor(comboBox));
+		
+		modelNewDBTable.addRow(new Object[]{});
+	}
+	
+	// Setting model for showing table
+	private void setModelShowTable() {
+		Vector<Vector<String>> data = databaseManager.selectTable(list_tables.getSelectedValue());
+		Vector<String> columns = databaseManager.getColumnsName(list_tables.getSelectedValue());
+		modelNewDBTable.setDataVector(data, columns);
+		
 	}
 }

@@ -13,6 +13,7 @@ public class DatabaseManager {
 	private final String password;
 	private static Statement statement;
 	private static Connection connection;
+	public boolean isDatabaseUsed;
 	
 	public DatabaseManager(String user, String password) {
 		this.user = user;
@@ -34,6 +35,7 @@ public class DatabaseManager {
 			if(isConnected()) {
 				statement.close();
 				connection.close();
+				isDatabaseUsed = false;
 			}
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -52,6 +54,7 @@ public class DatabaseManager {
 	public void useDB(String name) {
 		try {
 			statement.executeQuery(Database.use(name));
+			isDatabaseUsed = true;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -101,16 +104,6 @@ public class DatabaseManager {
 		return null;
 	}
 	
-	public boolean isDatabaseUsed() {
-		try {
-			ResultSet resultSet = statement.executeQuery(Database.used());
-			return resultSet.next();
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
-		return false;
-	}
-	
 	public void createTable(String name, Vector<String> rowName,
 			Vector<String> rowType) {
 		try {
@@ -153,6 +146,20 @@ public class DatabaseManager {
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public Vector<String> getColumnsName(String tableName) {
+		try {
+			Vector<String> columns = new Vector<>();
+			ResultSet resultSet = statement.executeQuery(Table.getColumnsName(tableName));
+			while(resultSet.next()) {
+				columns.addElement(resultSet.getString(0));
+			}
+			return columns;
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	public Vector<String> getColumnsType(String tableName) {
@@ -211,10 +218,6 @@ public class DatabaseManager {
 		
 		private static String show() {
 			return "SHOW DATABASES";
-		}
-		
-		private static String used() {
-			return "SELECT DATABASE()";
 		}
 	}
 	
