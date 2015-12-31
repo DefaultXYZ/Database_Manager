@@ -6,8 +6,6 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Vector;
 
-import com.mysql.jdbc.ResultSetMetaData;
-
 public class DatabaseManager {
 	private static final String DRIVER = "com.mysql.jdbc.Driver";
 	private static final String URL = "jdbc:mysql://localhost/";
@@ -109,15 +107,7 @@ public class DatabaseManager {
 	public void createTable(String name, Vector<String> rowName,
 			Vector<String> rowType) {
 		try {
-			String query = Table.create(name);
-			for(int i = 0; i < rowName.size(); ++i) {
-				query += rowName.elementAt(i) + " ";
-				query += rowType.elementAt(i) + ", ";
-			}
-			query = query.substring(0, query.length() - 2);
-			query += ")";
-			statement.executeUpdate(query);
-			
+			statement.executeUpdate(Table.create(name, rowName, rowType));
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -181,14 +171,8 @@ public class DatabaseManager {
 	public Vector<Vector<String>> selectTable(String name) {
 		try {
 			Vector<Vector<String>> data = new Vector<>();
-			String sql = Table.select(name);
-			Vector<String> columnNames = getColumnsType(name);
-			for(String columnName : columnNames) {
-				sql += columnName + ", ";
-			}
-			sql = sql.substring(0, sql.length() - 2);
-			sql += " FROM " + name;
-			ResultSet resultSet = statement.executeQuery(sql);
+			Vector<String> columnNames = getColumnsName(name);
+			ResultSet resultSet = statement.executeQuery(Table.select(name, columnNames));
 			while(resultSet.next()) {
 				Vector<String> row = new Vector<>();
 				for(String column : columnNames) {

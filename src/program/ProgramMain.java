@@ -315,7 +315,7 @@ public class ProgramMain extends JFrame {
 		}
 	}
 	
-	// Confirm changes
+	// Confirm changes in Panel Table
 	private class Btn_createNewTableActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent arg0) {
 			if(isCreating) {
@@ -591,11 +591,9 @@ public class ProgramMain extends JFrame {
 			modelNewDBTable = new DefaultTableModel();
 			Vector<String> columns = databaseManager.getColumnsName(list_tables.getSelectedValue());
 			if (columns != null) {
-				for (String column : columns) {
-					System.out.printf("Column %s; ", column);
-				}
-				//Vector<Vector<String>> data = databaseManager.selectTable(list_tables.getSelectedValue());
-				//modelNewDBTable.setDataVector(new Vector<>(), columns);
+				Vector<Vector<String>> data = databaseManager.selectTable(list_tables.getSelectedValue());
+				modelNewDBTable.setDataVector(data, columns);
+				table.setModel(modelNewDBTable);
 			} 
 		}
 	}
