@@ -355,25 +355,20 @@ public class ProgramMain extends JFrame {
 		@Override
 		public void componentHidden(ComponentEvent arg0) {
 			if(modelNewDBTable != null) {
-				// Clear table
-				for(int i = 0; i < modelNewDBTable.getRowCount(); ++i) {
-					modelNewDBTable.removeRow(i);
-				}
-				mn_rows.setEnabled(false);
+				modelNewDBTable = new DefaultTableModel();
+				table.setModel(modelNewDBTable);
 			}
+			isCreating = false;
 		}
 		// When Shown
 		@Override
 		public void componentShown(ComponentEvent arg0) {
 			mn_rows.setEnabled(true);
-			// NEED TO FIX PROBLEMS!!!!
-			/*
 			if(isCreating) {
 				setModelNewTable();
 			} else {
 				setModelShowTable();
 			}
-			*/
 		}
 	}
 	
@@ -528,8 +523,8 @@ public class ProgramMain extends JFrame {
 		@Override
 		public void mouseClicked(MouseEvent mouseEvent) {
 			if(mouseEvent.getClickCount() == 2) {
-				String table = list_tables.getSelectedValue();
-				if(!table.isEmpty()) {
+				if(!list_tables.isSelectionEmpty()) {
+					String table = list_tables.getSelectedValue();
 					isCreating = false;
 					container.show(panel_slider, TAG_ADD_TABLE);
 					lbl_status.setText("Table " + table + " used");
@@ -592,9 +587,12 @@ public class ProgramMain extends JFrame {
 	
 	// Setting model for showing table
 	private void setModelShowTable() {
-		Vector<Vector<String>> data = databaseManager.selectTable(list_tables.getSelectedValue());
+		modelNewDBTable = new DefaultTableModel();
 		Vector<String> columns = databaseManager.getColumnsName(list_tables.getSelectedValue());
-		modelNewDBTable.setDataVector(data, columns);
-		
+		for(String column : columns) {
+			System.out.printf("Column %s; ", column);
+		}
+		//Vector<Vector<String>> data = databaseManager.selectTable(list_tables.getSelectedValue());
+		//modelNewDBTable.setDataVector(new Vector<>(), columns);
 	}
 }
