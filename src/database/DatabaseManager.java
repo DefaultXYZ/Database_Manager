@@ -6,6 +6,8 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Vector;
 
+import com.mysql.jdbc.ResultSetMetaData;
+
 public class DatabaseManager {
 	private static final String DRIVER = "com.mysql.jdbc.Driver";
 	private static final String URL = "jdbc:mysql://localhost/";
@@ -153,7 +155,7 @@ public class DatabaseManager {
 			Vector<String> columns = new Vector<>();
 			ResultSet resultSet = statement.executeQuery(Table.getColumnsName(tableName));
 			while(resultSet.next()) {
-				columns.addElement(resultSet.getString(0));
+				columns.addElement(resultSet.getString(1));
 			}
 			return columns;
 		} catch(Exception e) {

@@ -587,12 +587,16 @@ public class ProgramMain extends JFrame {
 	
 	// Setting model for showing table
 	private void setModelShowTable() {
-		modelNewDBTable = new DefaultTableModel();
-		Vector<String> columns = databaseManager.getColumnsName(list_tables.getSelectedValue());
-		for(String column : columns) {
-			System.out.printf("Column %s; ", column);
+		if (!list_tables.isSelectionEmpty()) {
+			modelNewDBTable = new DefaultTableModel();
+			Vector<String> columns = databaseManager.getColumnsName(list_tables.getSelectedValue());
+			if (columns != null) {
+				for (String column : columns) {
+					System.out.printf("Column %s; ", column);
+				}
+				//Vector<Vector<String>> data = databaseManager.selectTable(list_tables.getSelectedValue());
+				//modelNewDBTable.setDataVector(new Vector<>(), columns);
+			} 
 		}
-		//Vector<Vector<String>> data = databaseManager.selectTable(list_tables.getSelectedValue());
-		//modelNewDBTable.setDataVector(new Vector<>(), columns);
 	}
 }
