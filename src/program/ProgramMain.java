@@ -330,7 +330,7 @@ public class ProgramMain extends JFrame {
 				// Execute query
 				databaseManager.createTable(tableName, rowName, rowType);
 				// Show status
-				lbl_status.setText("Table " + tableName + " was created");
+				lbl_status.setText("Table " + tableName + " created");
 			} else {
 				
 			}
@@ -344,6 +344,7 @@ public class ProgramMain extends JFrame {
 		public void actionPerformed(ActionEvent e) {
 			// Show Panel Tables
 			container.show(panel_slider, TAG_DATABASES);
+			lbl_status.setText("Connected");
 		}
 	}
 	
@@ -432,6 +433,7 @@ public class ProgramMain extends JFrame {
 			String database = JOptionPane.showInputDialog("Enter database name");
 			databaseManager.createDB(database);
 			refreshListDatabases();
+			lbl_status.setText("Database " + database + " created");
 		}
 	}
 	
@@ -442,6 +444,8 @@ public class ProgramMain extends JFrame {
 				String database = list_databases.getSelectedValue();
 				databaseManager.dropDB(database);
 				refreshListDatabases();
+				lbl_status.setText("Database " + database + " deleted");
+				list_tables.setModel(new DefaultListModel<>());
 			}
 		}
 	}
@@ -478,7 +482,7 @@ public class ProgramMain extends JFrame {
 				String table = list_tables.getSelectedValue();
 				databaseManager.dropTable(table);
 				refreshListTables();
-				lbl_status.setText("Table " + table + " was deleted");
+				lbl_status.setText("Table " + table + " deleted");
 			}
 		}
 	}
@@ -495,7 +499,7 @@ public class ProgramMain extends JFrame {
 		public void actionPerformed(ActionEvent e) {
 			String count = JOptionPane.showInputDialog("Enter count:");
 			if(!count.isEmpty()) {
-				for(int i = 0; i <= Integer.parseInt(count); ++i) {
+				for(int i = 0; i < Integer.parseInt(count); ++i) {
 					modelNewDBTable.addRow(new Object[]{});
 				}
 			}
@@ -578,6 +582,7 @@ public class ProgramMain extends JFrame {
 		comboBox.addItem("TEXT");
 		comboBox.addItem("INT");
 		comboBox.addItem("FLOAT");
+		
 		columnType.setCellEditor(new DefaultCellEditor(comboBox));
 		
 		modelNewDBTable.addRow(new Object[]{});
