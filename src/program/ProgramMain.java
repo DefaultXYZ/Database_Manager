@@ -319,23 +319,28 @@ public class ProgramMain extends JFrame {
 			if(isCreating) {
 				// Get table name
 				String tableName = JOptionPane.showInputDialog("Enter table name:");
-				
-				Vector<String> rowName = new Vector<>();
-				Vector<String> rowType = new Vector<>();
-				// Get data from table
-				for(int i = 0; i < modelNewDBTable.getRowCount(); ++i) {
-					rowName.addElement(modelNewDBTable.getValueAt(i, 0).toString());
-					rowType.addElement(modelNewDBTable.getValueAt(i, 1).toString());
+				if(isNameValid(tableName)) {
+					Vector<String> rowName = new Vector<>();
+					Vector<String> rowType = new Vector<>();
+					// Get data from table
+					for(int i = 0; i < modelNewDBTable.getRowCount(); ++i) {
+						rowName.addElement(modelNewDBTable.getValueAt(i, 0).toString());
+						rowType.addElement(modelNewDBTable.getValueAt(i, 1).toString());
+					}
+					// Execute query
+					databaseManager.createTable(tableName, rowName, rowType);
+					// Show status
+					lbl_status.setText("Table " + tableName + " created");
+					// Show Panel Tables
+					container.show(panel_slider, TAG_DATABASES);
+				} else {
+					JOptionPane.showMessageDialog(contentPane, "Name is invalid", "Error", JOptionPane.ERROR_MESSAGE);
+					lbl_status.setText("Table " + tableName + " not created");
 				}
-				// Execute query
-				databaseManager.createTable(tableName, rowName, rowType);
-				// Show status
-				lbl_status.setText("Table " + tableName + " created");
 			} else {
-				
+				// Show Panel Tables
+				container.show(panel_slider, TAG_DATABASES);
 			}
-			// Show Panel Tables
-			container.show(panel_slider, TAG_DATABASES);
 		}
 	}
 	
@@ -431,9 +436,14 @@ public class ProgramMain extends JFrame {
 	private class MntmDbCreateActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent arg0) {
 			String database = JOptionPane.showInputDialog("Enter database name");
-			databaseManager.createDB(database);
-			refreshListDatabases();
-			lbl_status.setText("Database " + database + " created");
+			if(isNameValid(database)) {
+				databaseManager.createDB(database);
+				refreshListDatabases();
+				lbl_status.setText("Database " + database + " created");
+			} else {
+				JOptionPane.showMessageDialog(contentPane, "Name is invalid", "Error", JOptionPane.ERROR_MESSAGE);
+				lbl_status.setText("Database " + database + " not created");
+			}
 		}
 	}
 	
@@ -446,6 +456,7 @@ public class ProgramMain extends JFrame {
 				refreshListDatabases();
 				lbl_status.setText("Database " + database + " deleted");
 				list_tables.setModel(new DefaultListModel<>());
+				mn_table.setEnabled(false);
 			}
 		}
 	}
@@ -599,5 +610,17 @@ public class ProgramMain extends JFrame {
 				table.setModel(modelNewDBTable);
 			} 
 		}
+	}
+	
+	private boolean isNameValid(String name) {
+		if(!Character.isJavaIdentifierStart(name.charAt(0))) {
+			return false;
+		}
+		for(int i = 1; i < name.length(); ++i) {
+			if(!Character.isJavaIdentifierPart(name.charAt(i))) {
+				return false;
+			}
+		}
+		return true;
 	}
 }
