@@ -338,6 +338,7 @@ public class ProgramMain extends JFrame {
 					lbl_status.setText("Table " + tableName + " not created");
 				}
 			} else {
+				
 				// Show Panel Tables
 				container.show(panel_slider, TAG_DATABASES);
 			}
@@ -404,14 +405,18 @@ public class ProgramMain extends JFrame {
 	private class Panel_databasesComponentListener extends ComponentAdapter {
 		@Override
 		public void componentShown(ComponentEvent e) {
+			String db = list_databases.getSelectedValue(); 
 			refreshListDatabases();
 			list_tables.setModel(new DefaultListModel<>());
 			if(databaseManager.isDatabaseUsed) {
+				String table = list_tables.getSelectedValue();
 				mn_table.setEnabled(true);
 				refreshListTables();
+				list_tables.setSelectedValue(table, true);
 			}
 			mn_database.setEnabled(true);
 			mn_rows.setEnabled(false);
+			list_databases.setSelectedValue(db, true);
 		}
 	}
 	
