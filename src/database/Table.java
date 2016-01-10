@@ -24,8 +24,19 @@ public class Table {
 		return sql.toString();
 	}
 	
-	public static String update(String name) {
-		return "UPDATE " + name + " SET ";
+	public static String update(String name, Vector<String> columns, Vector<String> row, String[] cell) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("UPDATE ").append(name).append(" SET ");
+		for(int i = 0; i < row.size(); ++i) {
+			if(!columns.elementAt(i).equals(cell[0])) {
+				sql.append(columns.elementAt(i))
+					.append(" = '").append(row.elementAt(i)).append("', ");
+			}
+		}
+		sql.delete(sql.length() - 2, sql.length());
+		sql.append(" WHERE ").append(cell[0])
+			.append(" = '").append(cell[1]).append("'");
+		return sql.toString();
 	}
 	
 	public static String getColumnsName(String name) {
@@ -46,7 +57,23 @@ public class Table {
 		return sql.toString();
 	}
 	
-	public static String insert(String name) {
-		return "INSERT INTO " + name + " VALUES (";
+	public static String insert(String name, Vector<String> row) {
+		StringBuilder sql = new StringBuilder("INSERT INTO ");
+		sql.append(name).append(" VALUES (");
+		for(String data : row) {
+			sql.append("'").append(data).append("', ");
+		}
+		sql.delete(sql.length() - 2, sql.length());
+		sql.append(")");
+		return sql.toString();
 	}
+	
+	public static String delete(String name, String column, String value) {
+		StringBuilder sql = new StringBuilder("DELETE FROM ");
+		sql.append(name).append(" WHERE ").append(column)
+			.append(" = '").append(value).append("'");
+		return sql.toString();
+	}
+	
+	
 }

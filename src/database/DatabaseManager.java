@@ -121,20 +121,9 @@ public class DatabaseManager {
 		}
 	}
 	
-	public void updateRow(String tableName, Vector<String> data, String[] notChanged) {
+	public void updateRow(String tableName, Vector<String> row, String[] notChanged) {
 		try {
-			ResultSet resultSet = statement.executeQuery(Table.getColumnsName(tableName));
-			Vector<String> columnName = new Vector<>();
-			while(resultSet.next()) {
-				columnName.addElement(resultSet.getString(1));
-			}
-			String sql = Table.update(tableName);
-			for(int i = 0; i < columnName.size(); ++i) {
-				sql += columnName.elementAt(i) + " = '" + data.elementAt(i) + "', ";
-			}
-			sql = sql.substring(0, sql.length() - 2);
-			sql += " WHERE " + notChanged[0] + " = '" + notChanged[1] + "'";
-			statement.executeUpdate(sql);
+			statement.executeUpdate(Table.update(tableName, getColumnsName(tableName), row, notChanged));
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -185,5 +174,21 @@ public class DatabaseManager {
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	public void insertRow(String name, Vector<String> row) {
+		try {
+			statement.executeUpdate(Table.insert(name, row));
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void deleteRow(String name, String column, String value) {
+		try {
+			statement.executeUpdate(Table.delete(name, column, value));
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

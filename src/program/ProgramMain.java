@@ -48,6 +48,9 @@ public class ProgramMain extends JFrame {
 	private final static String TAG_ADD_TABLE = "ADD_TABLE";
 	
 	private boolean isCreating;
+	// To save old data from gotten table
+	private Vector<Vector<String>> oldData;
+	private int countRows;
 	
 	private JLayeredPane panel_slider;
 	private CardLayout container;
@@ -269,7 +272,6 @@ public class ProgramMain extends JFrame {
 		lbl_status = new JLabel("Disconnected");
 		lbl_status.setHorizontalAlignment(SwingConstants.CENTER);
 		panel_statusBar.add(lbl_status);
-		
 	}
 	
 	// Try to connect
@@ -319,26 +321,43 @@ public class ProgramMain extends JFrame {
 			if(isCreating) {
 				// Get table name
 				String tableName = JOptionPane.showInputDialog("Enter table name:");
-				if(isNameValid(tableName)) {
-					Vector<String> rowName = new Vector<>();
-					Vector<String> rowType = new Vector<>();
-					// Get data from table
-					for(int i = 0; i < modelNewDBTable.getRowCount(); ++i) {
-						rowName.addElement(modelNewDBTable.getValueAt(i, 0).toString());
-						rowType.addElement(modelNewDBTable.getValueAt(i, 1).toString());
+				if(tableName != null) {
+					if(isNameValid(tableName)) {
+						Vector<String> rowName = new Vector<>();
+						Vector<String> rowType = new Vector<>();
+						// Get data from table
+						for(int i = 0; i < modelNewDBTable.getRowCount(); ++i) {
+							rowName.addElement(modelNewDBTable.getValueAt(i, 0).toString());
+							rowType.addElement(modelNewDBTable.getValueAt(i, 1).toString());
+						}
+						// Execute query
+						databaseManager.createTable(tableName, rowName, rowType);
+						// Show status
+						lbl_status.setText("Table " + tableName + " created");
+						// Show Panel Tables
+						container.show(panel_slider, TAG_DATABASES);
+					} else {
+						JOptionPane.showMessageDialog(contentPane, "Name is invalid", "Error", JOptionPane.ERROR_MESSAGE);
+						lbl_status.setText("Table " + tableName + " not created");
 					}
-					// Execute query
-					databaseManager.createTable(tableName, rowName, rowType);
-					// Show status
-					lbl_status.setText("Table " + tableName + " created");
-					// Show Panel Tables
-					container.show(panel_slider, TAG_DATABASES);
-				} else {
-					JOptionPane.showMessageDialog(contentPane, "Name is invalid", "Error", JOptionPane.ERROR_MESSAGE);
-					lbl_status.setText("Table " + tableName + " not created");
 				}
 			} else {
-				
+				int newCountRows = modelNewDBTable.getRowCount();
+				// If added new rows, insert to table
+				if(newCountRows > countRows) {
+					for(int i = countRows; i < newCountRows; ++i) {
+						Vector<String> row = new Vector<>();
+						for(int j = 0; j < modelNewDBTable.getColumnCount(); ++j) {
+							String data = modelNewDBTable.getValueAt(i, j).toString();
+							if(data != null && !data.isEmpty()) {
+								row.addElement(data);
+							}
+						}
+						databaseManager.insertRow(list_tables.getSelectedValue(), row);
+					}
+				}
+				// Update changed rows
+				updateChangedRows();
 				// Show Panel Tables
 				container.show(panel_slider, TAG_DATABASES);
 			}
@@ -364,6 +383,7 @@ public class ProgramMain extends JFrame {
 				table.setModel(modelNewDBTable);
 			}
 			isCreating = false;
+			mn_rows.setEnabled(false);
 		}
 		// When Shown
 		@Override
@@ -441,13 +461,15 @@ public class ProgramMain extends JFrame {
 	private class MntmDbCreateActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent arg0) {
 			String database = JOptionPane.showInputDialog("Enter database name");
-			if(isNameValid(database)) {
-				databaseManager.createDB(database);
-				refreshListDatabases();
-				lbl_status.setText("Database " + database + " created");
-			} else {
-				JOptionPane.showMessageDialog(contentPane, "Name is invalid", "Error", JOptionPane.ERROR_MESSAGE);
-				lbl_status.setText("Database " + database + " not created");
+			if(database != null) {
+				if(isNameValid(database)) {
+					databaseManager.createDB(database);
+					refreshListDatabases();
+					lbl_status.setText("Database " + database + " created");
+				} else {
+					JOptionPane.showMessageDialog(contentPane, "Name is invalid", "Error", JOptionPane.ERROR_MESSAGE);
+					lbl_status.setText("Database " + database + " not created");
+				}
 			}
 		}
 	}
@@ -525,7 +547,13 @@ public class ProgramMain extends JFrame {
 	// Delete row
 	private class MntmDeleteRowActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
-			modelNewDBTable.removeRow(table.getSelectedRow());
+			if(table.getSelectedRow() == -1) {
+				return;
+			}
+			databaseManager.deleteRow(list_tables.getSelectedValue(),
+					table.getColumnName(0), 
+					table.getValueAt(table.getSelectedRow(), 0).toString());
+			setModelShowTable();
 		}
 	}
 	
@@ -607,18 +635,30 @@ public class ProgramMain extends JFrame {
 	// Setting model for showing table
 	private void setModelShowTable() {
 		if (!list_tables.isSelectionEmpty()) {
+			oldData = new Vector<>();
 			modelNewDBTable = new DefaultTableModel();
 			Vector<String> columns = databaseManager.getColumnsName(list_tables.getSelectedValue());
 			if (columns != null) {
-				Vector<Vector<String>> data = databaseManager.selectTable(list_tables.getSelectedValue());
+				Vector<Vector<String>> data = new Vector<>();
+				data = databaseManager.selectTable(list_tables.getSelectedValue());
 				modelNewDBTable.setDataVector(data, columns);
+				for(int i = 0; i < modelNewDBTable.getRowCount(); ++i) {
+					Vector<String> row = new Vector<>();
+					for(int j = 0; j < modelNewDBTable.getColumnCount(); ++j) {
+						row.addElement(modelNewDBTable.getValueAt(i, j).toString());
+					}
+					oldData.addElement(row);
+				}
 				table.setModel(modelNewDBTable);
+				// For insert new rows
+				countRows = modelNewDBTable.getRowCount();
 			} 
 		}
 	}
 	
+	// Verification correctness name for db or table
 	private boolean isNameValid(String name) {
-		if(!Character.isJavaIdentifierStart(name.charAt(0))) {
+		if(name.length() == 0 || !Character.isJavaIdentifierStart(name.charAt(0))) {
 			return false;
 		}
 		for(int i = 1; i < name.length(); ++i) {
@@ -627,5 +667,36 @@ public class ProgramMain extends JFrame {
 			}
 		}
 		return true;
+	}
+	
+	// Get all rows, compare with old rows and update if is smth new
+	private void updateChangedRows() {
+		for(int i = 0; i < modelNewDBTable.getRowCount(); ++i) {
+			if(i >= oldData.size()) {
+				return;
+			}
+			// Number of column, on which is unchanged cell
+			int unchangedCell = -1;
+			// Number of row, on which is row to update 
+			int isChangedRow = -1;
+			Vector<String> row = new Vector<>();
+			// Check row for changed: if true returns column, false - -1;
+			for(int j = 0; j < modelNewDBTable.getColumnCount(); ++j) {
+				String oldCell = oldData.elementAt(i).elementAt(j);
+				String newCell = modelNewDBTable.getValueAt(i, j).toString();
+				if(oldCell.equals(newCell)) {
+					unchangedCell = j;
+				} else {
+					isChangedRow = i;
+				}
+				row.add(newCell);
+			}
+			if(isChangedRow != -1 && unchangedCell != -1) {
+				String[] notChanged = new String[2];
+				notChanged[0] = modelNewDBTable.getColumnName(unchangedCell);
+				notChanged[1] = modelNewDBTable.getValueAt(isChangedRow, unchangedCell).toString();
+				databaseManager.updateRow(list_tables.getSelectedValue(), row, notChanged);
+			}
+		}
 	}
 }
